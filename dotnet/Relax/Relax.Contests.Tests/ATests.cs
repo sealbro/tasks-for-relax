@@ -29,11 +29,11 @@ namespace Relax.Contests.Tests
 
         [Theory]
         [InlineData(4,
-@"word
+            @"word
 localization
 internationalization
 pneumonoultramicroscopicsilicovolcanoconiosis",
-@"word
+            @"word
 l10n
 i18n
 p43s")]
@@ -51,9 +51,28 @@ p43s")]
                 var actual = GetWriteLineMessage();
 
                 Assert.Equal(expected, actual);
-                
-                
             }
+        }
+
+        [Theory]
+        [InlineData(3,
+            @"1 1 0
+1 1 1
+1 0 0", 2)]
+        [InlineData(2,
+            @"1 0 0
+0 1 1", 1)]
+        public void A231_Test(sbyte count, string input, int expected)
+        {
+            SetupInputs(GetStrings(count, input));
+
+            A231.MainX(Args);
+
+            var message = GetWriteLineMessage();
+            var actual = int.Parse(message);
+
+            Assert.Equal(expected, actual);
+            
         }
     }
 }
