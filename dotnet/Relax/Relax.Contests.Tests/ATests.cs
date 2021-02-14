@@ -72,7 +72,20 @@ p43s")]
             var actual = int.Parse(message);
 
             Assert.Equal(expected, actual);
-            
+        }
+
+        [Theory]
+        [InlineData("2 4", "4")]
+        [InlineData("3 3", "4")]
+        public void A50_Test(string input, string expected)
+        {
+            SetupInputs(GetStrings(input));
+
+            A50.MainX(Args);
+
+            var actual = GetWriteLineMessage();
+
+            Assert.Equal(expected, actual);
         }
     }
 }
