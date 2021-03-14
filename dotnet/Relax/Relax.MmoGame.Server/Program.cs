@@ -10,18 +10,41 @@ namespace Relax.MmoGame.Server
     {
         static async Task Main(string[] args)
         {
-            var map = new WorldMap();
-            map.Draw(new PlayerPosition {Id = 1}, new PlayerPosition {Id = 2, X = 4},
-                new PlayerPosition {Id = 3, Y = 6}, new PlayerPosition {Id = 4, X = 9, Y = 9});
-
-            // var builder = new HostBuilder()
-            //     .ConfigureServices((_, services) =>
-            //     {
-            //         services
-            //             .AddHostedService<ServerHostService>();
-            //     });
+            // const int worldSize = 10;
+            // const int playersCount = 5;
             //
-            // await builder.RunConsoleAsync();
+            // var map = new WorldMap(worldSize);
+            // var playerWatcher = new PlayerWatcher(worldSize);
+            //
+            // var players = new RegisteredPlayer[playersCount];
+            // for (int i = 0; i < playersCount; i++)
+            // {
+            //     players[i] = playerWatcher.RegisterPlayer();
+            // }
+            //
+            // while (true)
+            // {
+            //     map.Draw(players);
+            //
+            //     foreach (var player in players)
+            //     {
+            //         var moveDirection = BotPlayer.GetDirection();
+            //         Console.WriteLine(moveDirection);
+            //         playerWatcher.MovePlayer(player, moveDirection);
+            //     }
+            //
+            //     await Task.Delay(1000);
+            // }
+
+
+            var builder = new HostBuilder()
+                .ConfigureServices((_, services) =>
+                {
+                    services
+                        .AddHostedService<ServerHostService>();
+                });
+
+            await builder.RunConsoleAsync();
         }
     }
 }

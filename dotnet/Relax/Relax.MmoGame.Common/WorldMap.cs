@@ -6,32 +6,33 @@ namespace Relax.MmoGame.Common
 {
     public class WorldMap
     {
-        private readonly int _size = 10;
+        private readonly int _size;
 
-        public WorldMap()
+        public WorldMap(int size)
         {
+            _size = size;
         }
 
-        public void Draw(params PlayerPosition[] players)
+        public void Draw(PlayerPosition[] players)
         {
             Array.Sort(players, new PeopleComparer());
 
+            Console.Clear();
+
             DrawLine();
-            for (int y = 0; y < _size; y++)
+            for (int x = 0; x < _size; x++)
             {
-                for (int x = 0; x < _size; x++)
+                for (int y = 0; y < _size; y++)
                 {
                     const string cell = "|_";
 
+                    // todo оптимизировать перебор
                     var player = players.FirstOrDefault(position => position.X == x && position.Y == y);
 
-                    if (player != null)
-                    {
-                        
-                    }
-                    
-                    Console.Write(player != null ? $"|{player.Id}" : cell);
+
+                    Console.Write(player != null ? $"|{player.PlayerId}" : cell);
                 }
+
                 Console.Write("|\n");
             }
         }
@@ -41,7 +42,7 @@ namespace Relax.MmoGame.Common
             Console.WriteLine(new string('_', _size * 2 + 1));
         }
     }
-    
+
     class PeopleComparer : IComparer<PlayerPosition>
     {
         public int Compare(PlayerPosition p1, PlayerPosition p2)

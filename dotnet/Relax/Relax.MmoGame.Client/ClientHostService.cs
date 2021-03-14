@@ -2,20 +2,20 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Hosting;
 
-namespace Relax.MmoGame.Server
+namespace Relax.MmoGame.Client
 {
-    public class ServerHostService : IHostedService
+    public class ClientHostService : IHostedService
     {
-        readonly GameServer gameServer = new(24242);
+        private readonly GameClient _gameClient = new("127.0.0.1", 24242);
 
         public async Task StartAsync(CancellationToken cancellationToken)
         {
-            await gameServer.Start(cancellationToken);
+            await _gameClient.Start(cancellationToken);
         }
 
         public async Task StopAsync(CancellationToken cancellationToken)
         {
-            await gameServer.DisposeAsync();
+            await _gameClient.DisposeAsync();
         }
     }
 }

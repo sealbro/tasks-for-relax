@@ -1,35 +1,84 @@
 ﻿using System;
+using System.Threading;
 
 namespace Relax.MmoGame.Common
 {
     public class PlayerWatcher
     {
-        public RegisteredPlayer RegisterPlayer()
-        {
-            // инкрементировать ИД
-            //
+        private readonly byte _sizeX;
+        private readonly byte _sizeY;
+        private readonly Random _random = new(DateTime.Now.Millisecond);
+        private volatile int _playerCounter;
 
-            return new RegisteredPlayer();
+        public byte WorldSize { get; }
+
+        public PlayerWatcher(byte size)
+        {
+            WorldSize = _sizeX = _sizeY = size;
         }
 
-        public void MovePlayer(int playerId, MoveDirection direction)
+        public PlayerPosition RegisterPlayer()
         {
-        }
-    }
+            var x = (byte) _random.Next(0, _sizeX - 1);
+            var y = (byte) _random.Next(0, _sizeY - 1);
 
-    public class RegisteredPlayer
-    {
-        public int Id { get; set; }
-        public int X { get; set; }
-        public int Y { get; set; }
-        public MoveDirection Direction { get; set; }
+            Interlocked.Increment(ref _playerCounter);
+            
+            return new PlayerPosition((byte)_playerCounter, x, y);
+        }
+
+        public void MovePlayer(PlayerPosition player, MoveDirection direction)
+        {
+            switch (direction)
+            {
+                case MoveDirection.Left:
+                    if (player.Y != 0)
+                    {
+                        player.Y -= 1;
+                    }
+
+                    break;
+                case MoveDirection.Right:
+                    if (player.Y != _sizeY - 1)
+                    {
+                        player.Y += 1;
+                    }
+
+                    break;
+                case MoveDirection.Up:
+                    if (player.X != 0)
+                    {
+                        player.X -= 1;
+                    }
+
+                    break;
+                case MoveDirection.Down:
+                    if (player.X != _sizeX - 1)
+                    {
+                        player.X += 1;
+                    }
+
+                    break;
+                case MoveDirection.None:
+                    break;
+            }
+        }
     }
 
     public class PlayerPosition : IComparable<PlayerPosition>
     {
-        public int Id { get; set; }
-        public int X { get; set; }
-        public int Y { get; set; }
+        public byte PlayerId { get; }
+
+        public byte X { get; set; }
+
+        public byte Y { get; set; }
+
+        public PlayerPosition(byte playerId, byte x, byte y)
+        {
+            PlayerId = playerId;
+            X = x;
+            Y = y;
+        }
 
         public int CompareTo(PlayerPosition other)
         {
@@ -38,12 +87,31 @@ namespace Relax.MmoGame.Common
         }
     }
 
-    public enum MoveDirection
+    public enum MoveDirection : byte
     {
         None,
         Left,
         Right,
         Up,
-        Down
+        Down,
+
+        Jump
+    }
+
+    public enum ClientCommand : byte
+    {
+        None,
+        Connect,
+        Disconnect,
+        Reconnect,
+        Move
+    }
+
+    public enum ServerCommand : byte
+    {
+        None,
+        Registered,
+        Exit,
+        Draw
     }
 }
