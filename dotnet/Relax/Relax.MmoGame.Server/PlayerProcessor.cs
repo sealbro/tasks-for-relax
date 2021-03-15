@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Linq;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
@@ -10,8 +9,8 @@ namespace Relax.MmoGame.Server
 {
     public class PlayerProcessor : IDisposable, IAsyncDisposable, IServerService
     {
-        private readonly byte[] _readBuffer = new byte[50]; // MTU 1500 bytes
-        private readonly byte[] _writeBuffer = new byte[500];
+        private readonly byte[] _readBuffer = new byte[Consts.MaxServerRead];
+        private readonly byte[] _writeBuffer = new byte[Consts.MaxServerWrite];
 
         #region Player
 
@@ -20,42 +19,37 @@ namespace Relax.MmoGame.Server
 
         private readonly ConcurrentQueue<byte[]> _packagesToSend = new();
         private TcpClient _client;
+        private NetworkStream _stream;
         private CancellationTokenSource _clientCancellationTokenSource;
 
-        private TimeSpan DisconnectTimeout = TimeSpan.FromSeconds(15);
+        private readonly TimeSpan DisconnectTimeout = TimeSpan.FromSeconds(15);
+
+        private DateTime lastReceive;
 
         #endregion
 
+        public bool CanRead => Connected && _stream.CanRead && _stream.DataAvailable;
+
+        public bool CanWrite => Connected && _stream.CanWrite;
+
         public bool Connected { get; private set; }
 
-        public PlayerPosition Player { get; }
+        public PlayerPosition Player { get; private set; }
 
         public PlayerProcessor(PlayerWatcher playerWatcher)
         {
             _playerWatcher = playerWatcher;
 
             _clientPackageProcessor = new ClientPackageProcessor(this);
-
-            Player = Connect();
         }
 
-        public async void Run(TcpClient client, CancellationToken cancellationToken)
+        public void Run(TcpClient client, CancellationToken cancellationToken)
         {
             _client = client;
+            _stream = client.GetStream();
             _clientCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-            var innerCancellationToken = _clientCancellationTokenSource.Token;
 
-            await Task.Run(async () =>
-            {
-                await using var stream = client.GetStream();
-
-                await Task.WhenAll(
-                    ReceivePackages(stream, innerCancellationToken),
-                    SendPackages(stream, innerCancellationToken)
-                );
-
-                // todo client.Dispose(); // watch cancellationToken 
-            }, innerCancellationToken);
+            Player = Connect();
         }
 
         #region IServerService
@@ -72,6 +66,7 @@ namespace Relax.MmoGame.Server
             var player = _playerWatcher.RegisterPlayer();
 
             Connected = true;
+            lastReceive = DateTime.Now;
 
             _packagesToSend.Enqueue(
                 new RegisteredPackage
@@ -96,39 +91,38 @@ namespace Relax.MmoGame.Server
 
         #endregion
 
-        private async Task ReceivePackages(NetworkStream stream, CancellationToken cancellationToken)
+        public async Task ReceivePackages()
         {
-            var lastReceive = DateTime.Now;
-
-            while (!cancellationToken.IsCancellationRequested && stream.CanRead)
+            if (!CanRead)
             {
-                if (DateTime.Now - lastReceive > DisconnectTimeout)
-                {
-                    Connected = false;
-                }
-
-                await Task.Delay(100, cancellationToken);
-
-                if (!stream.DataAvailable) continue;
-
-                await stream.ReadAsync(_readBuffer, cancellationToken);
-
-                lastReceive = DateTime.Now;
-
-                var command = _clientPackageProcessor.ReceiveProcess(_readBuffer);
-
-                Console.WriteLine(DateTime.Now.ToString("hh:mm:ss.fff") + $": {Player.PlayerId} => {command}");
+                return;
             }
+            
+            if (DateTime.Now - lastReceive > DisconnectTimeout)
+            {
+                Connected = false;
+            }
+
+            var cancellationToken = _clientCancellationTokenSource.Token;
+
+            await _stream.ReadAsync(_readBuffer, cancellationToken);
+            var command = _clientPackageProcessor.ReceiveProcess(_readBuffer);
+
+            Console.WriteLine(DateTime.Now.ToString("hh:mm:ss.fff") + $": {Player.PlayerId} => {command}");
+
+            lastReceive = DateTime.Now;
         }
 
-        private async Task SendPackages(NetworkStream stream, CancellationToken cancellationToken)
+        public async Task SendPackages()
         {
-            while (!cancellationToken.IsCancellationRequested && stream.CanWrite)
+            if (!CanWrite)
             {
-                while (_packagesToSend.TryDequeue(out var bytes))
-                {
-                    await stream.WriteAsync(bytes, cancellationToken);
-                }
+                return;
+            }
+            
+            while (_packagesToSend.TryDequeue(out var bytes))
+            {
+                await _stream.WriteAsync(bytes, _clientCancellationTokenSource.Token);
             }
         }
 

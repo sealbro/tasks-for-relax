@@ -4,6 +4,7 @@ using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 using Relax.MmoGame.Common;
+using Relax.MmoGame.Common.Extensions;
 
 namespace Relax.MmoGame.Client
 {
@@ -13,8 +14,8 @@ namespace Relax.MmoGame.Client
         private readonly int _port;
         private readonly TcpClient client;
 
-        private readonly byte[] _readBuffer = new byte[50];
-        private readonly byte[] _writeBuffer = new byte[50];
+        private readonly byte[] _readBuffer = new byte[Consts.MaxClientRead];
+        private readonly byte[] _writeBuffer = new byte[Consts.MaxClientWrite];
         private readonly ConcurrentQueue<byte[]> _packagesToSend = new();
         private CancellationTokenSource _cancellationTokenSource = new();
 
@@ -22,6 +23,8 @@ namespace Relax.MmoGame.Client
 
         private bool _registered = false;
         private byte _playerId = 0;
+
+        private readonly System.Timers.Timer _timer = new(1000);
 
         #endregion
 
@@ -35,6 +38,9 @@ namespace Relax.MmoGame.Client
             client = new TcpClient(_address, _port);
 
             _serverPackageProcessor = new ServerPackageProcessor(this);
+
+            _timer.AutoReset = true;
+            _timer.Elapsed += (_, _) => MovePlayer();
         }
 
         public async Task Start(CancellationToken cancellationToken)
@@ -46,9 +52,7 @@ namespace Relax.MmoGame.Client
             {
                 var stream = client.GetStream();
 
-                await Task.WhenAll(
-                    ReceivePackage(stream, innerCancellationToken),
-                    SendPackage(stream, innerCancellationToken));
+                await EventLoop(stream, innerCancellationToken);
             }
             catch (Exception ex)
             {
@@ -61,11 +65,10 @@ namespace Relax.MmoGame.Client
         public void Registered(RegisteredPackage package)
         {
             _registered = true;
+            _timer.Enabled = _registered;
             _playerId = package.PlayerId;
 
             _map = new WorldMap(package.WorldSize);
-
-            SendDirection(_playerId, _cancellationTokenSource.Token);
         }
 
         public void Exit()
@@ -76,68 +79,69 @@ namespace Relax.MmoGame.Client
 
         public void Draw(DrawPackage package)
         {
-            if (!_registered) return;
+            if (!_registered)
+            {
+                _timer.Enabled = false;
+                return;
+            }
 
             _map.Draw(package.Players);
         }
 
         #endregion
 
-        private async void SendDirection(byte playerId, CancellationToken cancellationToken)
+        private void MovePlayer()
         {
-            await Task.Run(async () =>
+            if (!_registered) return;
+
+            var bytes = new MovePackage
             {
-                while (!cancellationToken.IsCancellationRequested)
-                {
-                    await Task.Delay(1000, cancellationToken);
+                Direction = BotPlayer.GetDirection(), PlayerId = _playerId
+            }.Serialize(_writeBuffer);
 
-                    if (!_registered) continue;
-
-                    var bytes = new MovePackage
-                    {
-                        Direction = BotPlayer.GetDirection(), PlayerId = playerId
-                    }.Serialize(_writeBuffer);
-
-                    _packagesToSend.Enqueue(bytes);
-                }
-            }, cancellationToken);
+            _packagesToSend.Enqueue(bytes);
         }
 
-        private async Task SendPackage(NetworkStream stream, CancellationToken cancellationToken)
+        private async Task EventLoop(NetworkStream stream, CancellationToken cancellationToken)
         {
-            // await stream.WriteAsync(new ConnectPackage().Serialize(_writeBuffer), cancellationToken);
-
-            while (!cancellationToken.IsCancellationRequested && stream.CanWrite)
+            while (!cancellationToken.IsCancellationRequested)
             {
                 await Task.Delay(100, cancellationToken);
 
-                while (_packagesToSend.TryDequeue(out var bytes))
+                if (stream.CanWrite)
                 {
-                    await stream.WriteAsync(bytes, cancellationToken);
+                    WritePackages(stream, cancellationToken).RunBackground(cancellationToken);
+                }
+
+                if (stream.CanRead && stream.DataAvailable)
+                {
+                    ReadPackages(stream, cancellationToken).RunBackground(cancellationToken);
                 }
             }
         }
 
-        private async Task ReceivePackage(NetworkStream stream, CancellationToken cancellationToken)
+        private async Task ReadPackages(NetworkStream stream, CancellationToken cancellationToken)
         {
-            while (!cancellationToken.IsCancellationRequested && stream.CanRead)
+            await stream.ReadAsync(_readBuffer, cancellationToken);
+
+            var command = _serverPackageProcessor.ReceiveProcess(_readBuffer);
+
+            Console.WriteLine(DateTime.Now.ToString("hh:mm:ss.fff") + $": {_playerId} => {command}");
+        }
+
+        private async Task WritePackages(NetworkStream stream, CancellationToken cancellationToken)
+        {
+            while (_packagesToSend.TryDequeue(out var bytes))
             {
-                await Task.Delay(100, cancellationToken);
-
-                if (!stream.DataAvailable) continue;
-
-                await stream.ReadAsync(_readBuffer, cancellationToken);
-
-                var command = _serverPackageProcessor.ReceiveProcess(_readBuffer);
-
-                Console.WriteLine(DateTime.Now.ToString("hh:mm:ss.fff") + $": {_playerId} => {command}");
+                await stream.WriteAsync(bytes, cancellationToken);
             }
         }
 
         public void Dispose()
         {
+            _timer?.Dispose();
             client?.Close();
-            _cancellationTokenSource.Dispose();
+            _cancellationTokenSource?.Dispose();
         }
 
         public ValueTask DisposeAsync()

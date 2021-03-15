@@ -6,13 +6,13 @@ using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 using Relax.MmoGame.Common;
+using Relax.MmoGame.Common.Extensions;
 
 namespace Relax.MmoGame.Server
 {
     public class GameServer : IDisposable, IAsyncDisposable
     {
-        private const int Fps = 2;
-        private const byte WorldSize = 10;
+        private const byte WorldSize = 25;
         private const string Address = "127.0.0.1";
 
         private readonly TcpListener server;
@@ -24,7 +24,9 @@ namespace Relax.MmoGame.Server
         private readonly ConcurrentDictionary<byte, PlayerProcessor> _playerProcessors = new();
 
         private readonly PlayerWatcher _playerWatcher;
-        private readonly byte[] _writeBuffer = new byte[500];
+        private readonly byte[] _writeBuffer = new byte[Consts.MaxServerWrite];
+
+        private readonly System.Timers.Timer _timer = new(1000 / Consts.Fps);
 
         #endregion
 
@@ -32,6 +34,9 @@ namespace Relax.MmoGame.Server
         {
             server = new TcpListener(IPAddress.Parse(Address), port);
             _playerWatcher = new PlayerWatcher(WorldSize);
+
+            _timer.AutoReset = true;
+            _timer.Elapsed += (_, _) => SendPositionToAll();
         }
 
         public async Task Start(CancellationToken cancellationToken)
@@ -43,17 +48,18 @@ namespace Relax.MmoGame.Server
             {
                 server.Start();
 
-                SendPositionToAll(innerCancellationToken);
+                EventLoop(innerCancellationToken).RunBackground(innerCancellationToken);
 
                 while (!innerCancellationToken.IsCancellationRequested)
                 {
                     var client = await server.AcceptTcpClientAsync();
-
-                    Console.WriteLine("Client accepted!");
+                    _timer.Enabled = true;
 
                     var playerProcessor = new PlayerProcessor(_playerWatcher);
                     playerProcessor.Run(client, innerCancellationToken);
                     _playerProcessors.TryAdd(playerProcessor.Player.PlayerId, playerProcessor);
+
+                    Console.WriteLine($"Client {playerProcessor.Player.PlayerId} accepted!");
                 }
             }
             catch (Exception ex)
@@ -62,44 +68,62 @@ namespace Relax.MmoGame.Server
             }
         }
 
-        private async void SendPositionToAll(CancellationToken cancellationToken)
+        private async Task EventLoop(CancellationToken cancellationToken)
         {
-            await Task.Run(async () =>
+            while (!cancellationToken.IsCancellationRequested)
             {
-                while (!cancellationToken.IsCancellationRequested)
-                {
-                    await Task.Delay(1000 / Fps, cancellationToken);
+                await Task.Delay(100, cancellationToken);
 
-                    if (!_playerProcessors.Any())
+                foreach (var processor in _playerProcessors.Values)
+                {
+                    if (processor.CanRead)
                     {
-                        continue;
+                        processor.ReceivePackages().RunBackground(cancellationToken);
                     }
 
-                    var players = _playerProcessors.Values
-                        .Where(processor => processor.Connected)
-                        .Select(processor => processor.Player).ToArray();
-
-                    var bytes = new DrawPackage {Players = players}.Serialize(_writeBuffer);
-
-                    foreach (var processor in _playerProcessors.Values)
+                    if (processor.CanWrite)
                     {
-                        if (!processor.Connected)
-                        {
-                            _playerProcessors.TryRemove(processor.Player.PlayerId, out _);
-                        }
-
-                        processor.AddPackage(bytes);
+                        processor.SendPackages().RunBackground(cancellationToken);
                     }
                 }
-            }, cancellationToken);
+            }
+        }
+
+        private void SendPositionToAll()
+        {
+            if (!_playerProcessors.Any())
+            {
+                return;
+            }
+
+            var players = _playerProcessors.Values
+                .Where(processor => processor.Connected)
+                .Select(processor => processor.Player).ToArray();
+
+            var bytes = new DrawPackage {Players = players}.Serialize(_writeBuffer);
+
+            foreach (var processor in _playerProcessors.Values)
+            {
+                if (processor.Connected)
+                {
+                    processor.AddPackage(bytes);
+                }
+                else
+                {
+                    _playerProcessors.TryRemove(processor.Player.PlayerId, out _);
+                }
+            }
         }
 
         public void Dispose()
         {
+            _timer?.Dispose();
+
             foreach (var processor in _playerProcessors.Values)
             {
-                processor.Dispose();
+                processor?.Dispose();
             }
+
             server?.Stop();
             _serverCancellationTokenSource?.Dispose();
         }
