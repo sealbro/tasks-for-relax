@@ -1,5 +1,5 @@
-﻿using Relax.Contests.CodeForces.Tinkoff;
-using Relax.Contests.Tests.Core;
+﻿using Relax.Contests.Tests.Core;
+using Relax.Contests.Tinkoff;
 using Xunit;
 using Xunit.Abstractions;
 

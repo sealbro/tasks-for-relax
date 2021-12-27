@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Relax.Contests.CodeForces.Tinkoff
+namespace Relax.Contests.Tinkoff
 {
     /// <summary>
     /// https://codeforces.com/group/RVe1s8wFr4/contest/319339/problem/B
