@@ -13,7 +13,8 @@ namespace Relax.Contests.Tests.Core
 
         protected BaseUnitTest(ITestOutputHelper output)
         {
-            _separator = OperatingSystem.IsWindows() ? "\r\n" : "\n";
+            // _separator = OperatingSystem.IsWindows() ? "\r\n" : "\n";
+            _separator = "\n";
             _outputs = new Queue<string>();
             Console.SetOut(new OutConverter(output, _outputs));
         }

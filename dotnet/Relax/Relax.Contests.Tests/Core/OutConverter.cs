@@ -19,6 +19,8 @@ namespace Relax.Contests.Tests.Core
         public override Encoding Encoding => Encoding.Default;
 
         public override void WriteLine(int message) => WriteLine(message.ToString());
+        public override void WriteLine(uint message) => WriteLine(message.ToString());
+        public override void WriteLine(long message) => WriteLine(message.ToString());
 
         public override void WriteLine(string message) => WriteLine(message, System.Array.Empty<object>());
 
