@@ -3,7 +3,7 @@ package assert
 import "testing"
 
 type TTestType interface {
-	int | byte | string
+	int | byte | string | bool
 }
 
 func Equal[TValue TTestType](t *testing.T, expected TValue, actual TValue) {
