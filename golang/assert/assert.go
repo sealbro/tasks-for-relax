@@ -1,6 +1,8 @@
 package assert
 
-import "testing"
+import (
+	"testing"
+)
 
 type TTestType interface {
 	int | byte | string | bool
@@ -35,6 +37,24 @@ func EqualMany[TArray TTestType](t *testing.T, expected []TArray, actual []TArra
 		if actualItem != expectedItem {
 			t.Errorf("\nExpected: %v,\nActual: %v.", expected, actual)
 			break
+		}
+	}
+}
+
+func EqualMultiDimensional[TArray TTestType](t *testing.T, expected [][]TArray, actual [][]TArray) {
+	if len(expected) != len(actual) {
+		t.Errorf("\nDifferent length!!!\nExpected: %v,\nActual: %v.", expected, actual)
+		return
+	}
+
+	for i := 0; i < len(expected); i++ {
+		for j := 0; j < len(expected[i]); j++ {
+			actualItem := actual[i][j]
+			expectedItem := expected[i][j]
+			if actualItem != expectedItem {
+				t.Errorf("\nExpected: %v,\nActual: %v.", expected, actual)
+				break
+			}
 		}
 	}
 }
