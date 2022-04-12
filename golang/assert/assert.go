@@ -53,7 +53,7 @@ func EqualMultiDimensional[TArray TTestType](t *testing.T, expected [][]TArray, 
 			expectedItem := expected[i][j]
 			if actualItem != expectedItem {
 				t.Errorf("\nExpected: %v,\nActual: %v.", expected, actual)
-				break
+				return
 			}
 		}
 	}
