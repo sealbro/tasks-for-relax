@@ -1,5 +1,7 @@
 package n01_matrix
 
+import "math"
+
 // https://leetcode.com/problems/01-matrix/
 
 func updateMatrix(mat [][]int) [][]int {
@@ -27,32 +29,32 @@ func updateMatrix(mat [][]int) [][]int {
 }
 
 func min(mat [][]int, mi int, ni int, mLength int, nLength int) int {
-	minValue := -1
+	minValue := math.MaxInt32
 
 	if mi-1 >= 0 {
 		value := mat[mi-1][ni]
-		if minValue == -1 || value < minValue {
+		if value < minValue {
 			minValue = value
 		}
 	}
 
 	if mi+1 < mLength {
 		value := mat[mi+1][ni]
-		if minValue == -1 || value < minValue {
+		if value < minValue {
 			minValue = value
 		}
 	}
 
 	if ni-1 >= 0 {
 		value := mat[mi][ni-1]
-		if minValue == -1 || value < minValue {
+		if value < minValue {
 			minValue = value
 		}
 	}
 
 	if ni+1 < nLength {
 		value := mat[mi][ni+1]
-		if minValue == -1 || value < minValue {
+		if value < minValue {
 			minValue = value
 		}
 	}
