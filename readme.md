@@ -12,3 +12,12 @@
   - -10^4 < `short` | `int16` < 10^4 `[-32,768 to 32,767]`
   - 0 < `uint` | `uint32` < 10^9 `[4,294,967,295]`
   - -10^9 < `int` | `int32` < 10^9 `[-2,147,483,648 to 2,147,483,647]`
+
+## Algorithms summary
+
+- [Lexicographic Order](https://thecodingtrain.com/CodingChallenges/035.2-tsp.html)
+  - Find the largest x such that P[x]<P[x+1].
+  - (If there is no such x, P is the last permutation.)
+  - Find the largest y such that P[x]<P[y].
+  - Swap P[x] and P[y].
+  - Reverse P[x+1 .. n].
