@@ -31,7 +31,7 @@ func min(mat [][]int, mi int, ni int, mLength int, nLength int) int {
 
 	if mi-1 >= 0 {
 		value := mat[mi-1][ni]
-		if value < minValue {
+		if minValue == -1 || value < minValue {
 			minValue = value
 		}
 	}
