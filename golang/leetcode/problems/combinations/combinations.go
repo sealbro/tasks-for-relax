@@ -1,7 +1,5 @@
 package combinations
 
-import "fmt"
-
 // https://leetcode.com/problems/combinations/
 
 func combine(n int, k int) [][]int {
@@ -16,14 +14,11 @@ func combine(n int, k int) [][]int {
 	j := 0
 
 	for j < k {
-
-		fmt.Printf("%v %v\n", nums, j)
 		output = append(output, append([]int{}, nums[:k]...))
 		j = 0
 		for j < k && nums[j+1] == nums[j]+1 {
 			nums[j] = j + 1
 			j += 1
-			fmt.Printf("\t%v %v\n", nums, j)
 		}
 		nums[j] += 1
 	}
