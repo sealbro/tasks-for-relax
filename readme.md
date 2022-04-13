@@ -21,3 +21,4 @@
   - Find the largest y such that P[x]<P[y].
   - Swap P[x] and P[y].
   - Reverse P[x+1 .. n].
+- [The Combinatorial Derivation of the Fibonacci Sequence](http://mathonline.wikidot.com/the-combinatorial-derivation-of-the-fibonacci-sequence)
