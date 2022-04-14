@@ -4,6 +4,7 @@
 
 ## Additional information
 
+- [Binary converter](https://www.rapidtables.com)
 - [ANSI numbers](http://www.alanwood.net/demos/ansi.html)
   - A-Z = 65-90
   - a-z = 97-122 (32 diff)

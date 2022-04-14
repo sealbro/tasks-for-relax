@@ -5,7 +5,7 @@ import (
 )
 
 type TTestType interface {
-	int | byte | string | bool
+	int | uint | int32 | uint32 | byte | string | bool
 }
 
 func True(t *testing.T, actual bool) {
