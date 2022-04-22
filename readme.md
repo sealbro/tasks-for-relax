@@ -5,7 +5,7 @@
 ## Additional information
 
 - [Binary converter](https://www.rapidtables.com)
-- [ANSI numbers](http://www.alanwood.net/demos/ansi.html)
+- [ANSI codes](https://www.gaijin.at/en/infos/ascii-ansi-character-table)
   - A-Z = 65-90
   - a-z = 97-122 (32 diff)
 - [dotnet](https://docs.microsoft.com/en-us/dotnet/csharp/language-reference/builtin-types/integral-numeric-types) or [golang](https://www.callicoder.com/golang-basic-types-operators-type-conversion/) types suites for task constraints
