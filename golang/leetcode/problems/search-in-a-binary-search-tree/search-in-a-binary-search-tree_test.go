@@ -1,77 +1,77 @@
-package merge_two_binary_trees
+package search_in_a_binary_search_tree
 
 import (
 	"testing"
 )
 
 func TestCase1(t *testing.T) {
-	root1 := &TreeNode{
-		Val: 1,
+	nums := &TreeNode{
+		Val: 4,
 		Left: &TreeNode{
-			Val: 3,
+			Val: 2,
 			Left: &TreeNode{
-				Val:   5,
+				Val:   1,
 				Left:  nil,
 				Right: nil,
 			},
+			Right: &TreeNode{
+				Val:   3,
+				Left:  nil,
+				Right: nil,
+			},
+		},
+		Right: &TreeNode{
+			Val:   7,
+			Left:  nil,
+			Right: nil,
+		},
+	}
+	target := 2
+	expected := &TreeNode{
+		Val: 2,
+		Left: &TreeNode{
+			Val:   1,
+			Left:  nil,
 			Right: nil,
 		},
 		Right: &TreeNode{
-			Val:   2,
+			Val:   3,
 			Left:  nil,
 			Right: nil,
 		},
 	}
 
-	root2 := &TreeNode{
-		Val: 2,
-		Left: &TreeNode{
-			Val:  1,
-			Left: nil,
-			Right: &TreeNode{
-				Val:   4,
-				Left:  nil,
-				Right: nil,
-			},
-		},
-		Right: &TreeNode{
-			Val:  3,
-			Left: nil,
-			Right: &TreeNode{
-				Val:   7,
-				Left:  nil,
-				Right: nil,
-			},
-		},
-	}
+	actual := searchBST(nums, target)
 
-	expected := &TreeNode{
-		Val: 3,
+	EqualTreeNode(t, expected, actual)
+}
+
+func TestCase2(t *testing.T) {
+	nums := &TreeNode{
+		Val: 4,
 		Left: &TreeNode{
-			Val: 4,
+			Val: 2,
 			Left: &TreeNode{
-				Val:   5,
+				Val:   1,
 				Left:  nil,
 				Right: nil,
 			},
 			Right: &TreeNode{
-				Val:   4,
+				Val:   3,
 				Left:  nil,
 				Right: nil,
 			},
 		},
 		Right: &TreeNode{
-			Val:  5,
-			Left: nil,
-			Right: &TreeNode{
-				Val:   7,
-				Left:  nil,
-				Right: nil,
-			},
+			Val:   7,
+			Left:  nil,
+			Right: nil,
 		},
 	}
+	target := 5
+	var expected *TreeNode
 
-	actual := mergeTrees(root1, root2)
+	actual := searchBST(nums, target)
 
 	EqualTreeNode(t, expected, actual)
 }

@@ -195,6 +195,6 @@ func EqualTreeNode(t *testing.T, expected *Node, actual *Node) {
 		actualNext = actualNext.Next
 	}
 
-	EqualTreeNode(t, expected.Left, expected.Left)
-	EqualTreeNode(t, expected.Right, expected.Right)
+	EqualTreeNode(t, expected.Left, actual.Left)
+	EqualTreeNode(t, expected.Right, actual.Right)
 }
