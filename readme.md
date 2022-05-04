@@ -7,7 +7,10 @@
 - [Binary converter](https://www.rapidtables.com)
 - [ANSI codes](https://www.gaijin.at/en/infos/ascii-ansi-character-table)
   - A-Z = 65-90
-  - a-z = 97-122 (32 diff)
+  - a-z = 97-122
+  - 'a' - 'A' = 32 (diff)
+  - 'z' - 'a' = 25 (diff)
+  - [26]array size for english letters
 - [dotnet](https://docs.microsoft.com/en-us/dotnet/csharp/language-reference/builtin-types/integral-numeric-types) or [golang](https://www.callicoder.com/golang-basic-types-operators-type-conversion/) types suites for task constraints
   - 0 < `ushort` | `uint16` < 10^4 `[65,535]`
   - -10^4 < `short` | `int16` < 10^4 `[-32,768 to 32,767]`
