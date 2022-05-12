@@ -98,7 +98,7 @@ func TestCase9(t *testing.T) {
 func TestCase10(t *testing.T) {
 	input := []int{6, 7, 7, 8, 8, 10}
 	target := 6
-	expected := []int{-1, -1}
+	expected := []int{0, 0}
 
 	actual := searchRange(input, target)
 
