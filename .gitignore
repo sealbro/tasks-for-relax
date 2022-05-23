@@ -331,3 +331,5 @@ ASALocalRun/
 .mfractor/
 
 output
+
+.DS_Store
