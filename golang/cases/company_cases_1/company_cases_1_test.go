@@ -32,3 +32,31 @@ func TestCase4(t *testing.T) {
 
 	assert.Equal(t, 100, count)
 }
+
+func TestCase5(t *testing.T) {
+	list := &Item[int]{
+		Value: 0,
+		Next: &Item[int]{
+			Value: 1,
+			Next: &Item[int]{
+				Value: 2,
+				Next: &Item[int]{
+					Value: 3,
+				},
+			},
+		},
+	}
+
+	list = Reverse(list)
+
+	expected := []int{3, 2, 1, 0}
+
+	var actual []int
+	cur := list
+	for cur != nil {
+		actual = append(actual, cur.Value)
+		cur = cur.Next
+	}
+
+	assert.EqualMany(t, expected, actual)
+}

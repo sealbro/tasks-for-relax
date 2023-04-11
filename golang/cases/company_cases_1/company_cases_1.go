@@ -93,3 +93,25 @@ func (m *myMutex) Lock() {
 func (m *myMutex) Unlock() {
 	<-m.ch
 }
+
+type Item[T any] struct {
+	Value T
+	Next  *Item[T]
+}
+
+func Reverse[T any](iter *Item[T]) *Item[T] {
+	var prev *Item[T]
+	for iter != nil {
+		iter.Next, prev, iter = prev, iter, iter.Next
+	}
+
+	return prev
+}
+
+func (i *Item[T]) Print() {
+	iter := i
+	for iter != nil {
+		println(iter.Value)
+		iter = iter.Next
+	}
+}
