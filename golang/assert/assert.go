@@ -21,6 +21,7 @@ func False(t *testing.T, actual bool) {
 }
 
 func Equal[TValue TTestType](t *testing.T, expected TValue, actual TValue) {
+	t.Helper()
 	if actual != expected {
 		t.Errorf("Expected: %v, Actual: %v.", expected, actual)
 	}
