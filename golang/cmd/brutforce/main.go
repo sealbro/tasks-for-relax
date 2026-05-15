@@ -49,7 +49,7 @@ func main() {
 					}
 					_ = do.Body.Close()
 					if do.StatusCode != 401 {
-						log.Fatalf(password)
+						log.Fatalf("%s", password)
 					}
 				}
 
